@@ -9,6 +9,7 @@ set(CMAKE_CXX_FLAGS "-O3 -I. -std=c++11 -xHost -Wunknown-pragmas -qopenmp")
 project("CPP Compression" VERSION 0.1)
 
 message (${CMAKE_CXX_COMPILER})
+message (${CMAKE_CXX_FLAGS})
 
 include(FetchContent)
 
