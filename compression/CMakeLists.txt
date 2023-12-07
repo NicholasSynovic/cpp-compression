@@ -1,1 +1,1 @@
-add_executable(bin/serial_compression serial_compression.cpp)
+add_executable(serial_compression serial_compression.cpp)
