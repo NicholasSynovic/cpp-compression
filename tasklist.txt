@@ -1,6 +1,6 @@
 Replace make with cmake
     icpx and gcc
-
+Add documentation
 Utilize https://github.com/CLIUtils/CLI11 for command line parsing
 Implement openmp for decompression
 Implement openmp for compression
