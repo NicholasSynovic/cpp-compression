@@ -1,5 +1,3 @@
-Script to download test data
-
 Replace make with cmake
     icpx and gcc
 
