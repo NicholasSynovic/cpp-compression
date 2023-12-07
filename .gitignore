@@ -31,3 +31,4 @@
 *.out
 *.app
 bzip2
+testData/*
