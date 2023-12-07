@@ -90,7 +90,7 @@ int main(int argc, char **argv) {
     CLI::App app{"Serial BZIP Compression"};
     app.option_defaults()->always_capture_default(true);
 
-    app.add_option("-f,--filepath", inputFP, "File to compress with BZIP2")
+    app.add_option("-i,--input-filepath", inputFP, "File to compress with BZIP2")
         ->required()
         ->check(CLI::ExistingFile);
 
