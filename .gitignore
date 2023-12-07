@@ -50,4 +50,4 @@ _deps
 *.bz2
 *.zip
 testData/*
-Makefile
+*.org
