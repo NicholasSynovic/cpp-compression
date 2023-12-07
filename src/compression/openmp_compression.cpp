@@ -57,27 +57,35 @@ std::array<size_t, 3> compressStream(FILE *inputStream, FILE *outputStream) {
 
     // While not at end of file marker
     while (not(feof(inputStream))) {
-        // Space for the input stream data.
-        std::vector<char> chunk(compressedChunkSize);
 
-        // Read a chunk of data from the input stream.
-        auto dataBytes =
-            fread(chunk.data(), sizeof(char), compressedChunkSize, inputStream);
+        #pragma omp parallel for
+        for (int i = - 1; i < numberOfChunks; i++) {
 
-        inputBytes += dataBytes;
+            // Space for the input stream data.
+            std::vector<char> chunk(compressedChunkSize);
 
-        // Resize the bytes read to reduce
-        if (dataBytes < compressedChunkSize)
-            chunk.resize(dataBytes);
+            // Read a chunk of data from the input stream.
+            auto dataBytes = fread(chunk.data(), sizeof(char),
+                                   compressedChunkSize, inputStream);
 
-        auto compressedChunk = compressChunk(chunk);
+            inputBytes += dataBytes;
 
-        outputBytes += compressedChunk.size();
+            // Resize the bytes read to reduce
+            if (dataBytes < compressedChunkSize)
+                chunk.resize(dataBytes);
 
-        fwrite(compressedChunk.data(), sizeof(char), compressedChunk.size(),
-               outputStream);
+            auto compressedChunk = compressChunk(chunk);
 
-        numberOfChunks++;
+            outputBytes += compressedChunk.size();
+
+            #pragma omp critical
+            {
+                fwrite(compressedChunk.data(), sizeof(char),
+                       compressedChunk.size(), outputStream);
+            }
+            
+            numberOfChunks++;
+        }
     }
 
     return {size_t(numberOfChunks), inputBytes, outputBytes};
