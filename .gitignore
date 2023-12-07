@@ -31,10 +31,8 @@
 *.out
 *.app
 
-*.bz2
-*.zip
-testData/*
-Makefile
+# CMake
+.cmake/*
 CMakeLists.txt.user
 CMakeCache.txt
 CMakeFiles
@@ -46,3 +44,10 @@ install_manifest.txt
 compile_commands.json
 CTestTestfile.cmake
 _deps
+
+bin/*
+*.bz2
+*.zip
+testData/*
+Makefile
+serial_compression
