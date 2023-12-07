@@ -10,6 +10,14 @@ project("CPP Compression" VERSION 0.1)
 message (${CMAKE_CXX_COMPILER})
 
 include(FetchContent)
+
+FetchContent_Declare(
+        bzip2
+        GIT_REPOSITORY https://gitlab.com/bzip2/bzip2
+        GIT_TAG        bzip2-1.0.8
+)
+FetchContent_MakeAvailable(bzip2)
+
 FetchContent_Declare(
         cli11
         GIT_REPOSITORY https://github.com/CLIUtils/CLI11.git
