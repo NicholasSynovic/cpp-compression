@@ -1,0 +1,16 @@
+Script to download test data
+
+Replace make with cmake
+    icpx and gcc
+
+Utilize https://github.com/CLIUtils/CLI11 for command line parsing
+Implement openmp for decompression
+Implement openmp for compression
+Implement mpi for compression
+Implement mpi for decompression
+Create benchmark utility to test different implementations
+    serial
+    openmp
+    mpi
+    openmp + mpi
+    intel TBB?
