@@ -31,4 +31,7 @@
 *.out
 *.app
 bzip2
+bzip2_serial
+*.bz2
+*.zip
 testData/*
