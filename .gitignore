@@ -50,4 +50,3 @@ bin/*
 *.zip
 testData/*
 Makefile
-serial_compression
