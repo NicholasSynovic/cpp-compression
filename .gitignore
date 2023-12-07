@@ -46,7 +46,7 @@ CTestTestfile.cmake
 _deps
 *.cmake
 
-bin/*
+*/bin
 *.bz2
 *.zip
 testData/*
