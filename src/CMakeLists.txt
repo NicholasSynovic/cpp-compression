@@ -4,6 +4,7 @@ set (CMAKE_CXX_COMPILER icpx)
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+set(CMAKE_CXX_FLAGS "-O3 -I. -std=c++11 -xHost -Wunknown-pragmas -qopenmp")
 
 project("CPP Compression" VERSION 0.1)
 
