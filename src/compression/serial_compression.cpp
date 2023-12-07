@@ -9,7 +9,6 @@ static int BZIP_COMPRESSION_LEVEL = 9;
 static int BZIP_WORK_FACTOR = 0;
 static int BZIP_VERBOSE = 0;
 
-
 std::vector<char> compressChunk(const std::vector<char> &datum) {
     using uint = unsigned int;
     const uint datumSize = datum.size();
@@ -21,9 +20,9 @@ std::vector<char> compressChunk(const std::vector<char> &datum) {
     char *datumPtr = const_cast<char *>(datum.data());
     char *compressedDatumPtr = const_cast<char *>(compressedDatum.data());
 
-    auto ierr = BZ2_bzBuffToBuffCompress(compressedDatumPtr, &compressedDatumSize, datumPtr, datumSize,
-                                         BZIP_COMPRESSION_LEVEL, BZIP_VERBOSE,
-                                         BZIP_WORK_FACTOR);
+    auto ierr = BZ2_bzBuffToBuffCompress(
+        compressedDatumPtr, &compressedDatumSize, datumPtr, datumSize,
+        BZIP_COMPRESSION_LEVEL, BZIP_VERBOSE, BZIP_WORK_FACTOR);
 
     if (ierr != BZ_OK) {
         fprintf(stderr, "bzBuffToBuffCompress failed with %d\n", ierr);
