@@ -1,5 +1,11 @@
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+
 #include <array>
+#include <iostream>
 #include <sstream>
+#include <vector>
 
 #include <CLI/CLI.hpp>
 #include <bzlib.h>
@@ -11,21 +17,26 @@ static int BZIP_COMPRESSION_LEVEL = 9;
 static int BZIP_WORK_FACTOR = 0;
 static int BZIP_VERBOSE = 0;
 
-std::array<size_t, 3> decompressStream(FILE *inputStream, FILE *outputStream) {
-    std::string streamIn;
-    std::string bz2header = BZIP_HEADER;
-    size_t ibytes = 0;
-    size_t obytes = 0;
-    int nblocks = 0;
-    int blockSize100k = 0;
-    bool isFirstBlock = true;
-
-    // Ensure that there is enough space to store the deocmpressed buffer
-    const size_t decompressedBufferSize =
-        (BZIP_COMPRESSION_LEVEL * 1024 * 100 + 600);
-
-    std::string _bufIn(decompressedBufferSize, ' ');
+std::array<size_t, 3> decompress_stream(FILE *istream, FILE *ostream) {
+    // Create a read buffer big enough to hold the largest block possible.
+    // const size_t bufSize = (9 * 110000 + 600);
+    const size_t bufSize = (9 * 1024 * 100 + 600);
+    std::string _bufIn(bufSize, ' ');
     char *bufIn = const_cast<char *>(_bufIn.data());
+
+    // The data stream that'll actually be processed.
+    std::string streamIn;
+
+    std::string bz2header = BZIP_HEADER;
+    // std::cerr << bz2header << " length = " << bz2header.length() << " length
+    // = " << sizeof(_bz2header) << std::endl;
+
+    size_t ibytes = 0, obytes = 0;
+    int nblocks = 0;
+
+    int blockSize100k = 0;
+
+    bool isFirstBlock = true;
 
     while (true) {
 
@@ -66,6 +77,10 @@ std::array<size_t, 3> decompressStream(FILE *inputStream, FILE *outputStream) {
             // Deduce the block size used and assume all blocks are the same.
             blockSize100k = atoi(streamIn.substr(3, 1).c_str());
             bz2header[3] = streamIn[3];
+#ifdef _DEBUG
+            std::cerr << "blockSize = " << blockSize100k << " bz2header "
+                      << bz2header << "\n";
+#endif
         }
 
         size_t pos;
@@ -101,6 +116,13 @@ std::array<size_t, 3> decompressStream(FILE *inputStream, FILE *outputStream) {
             isize.push_back(size);
             idata.push_back(block);
 
+#ifdef _DEBUG
+            fprintf(stderr, "found bzheader at %d %lu %lu %s %d last=%d\n", i,
+                    pos, size,
+                    streamIn.substr(next, bz2header.length()).c_str(),
+                    numBlocksRead, not(next < nread));
+#endif
+
             pos = next;
             if (next == streamIn.length() and isEnd)
                 break;
@@ -122,14 +144,19 @@ std::array<size_t, 3> decompressStream(FILE *inputStream, FILE *outputStream) {
 
             int ierr = BZ2_bzBuffToBuffDecompress(odata[i].data(), &osize[i],
                                                   idata[i].data(), isize[i], 0,
-                                                  bz_verbose);
+                                                  BZIP_VERBOSE);
 
             err[i] = ierr;
+
+#ifdef _DEBUG
+            fprintf(stderr, "BZ2_bzBuffToBuffDecompress: %d %d %u %u %f\n",
+                    ierr, i, osize[i], isize[i], getElapsedTime(_t0, _t1));
+#endif
         }
 
         // Write out the decompressed streams.
         for (int i = 0; i < numBlocksRead; i++) {
-            if (isize[i] > 0)
+            if (isize[i] > 0) {
                 if (err[i] == BZ_OK) {
                     fwrite(odata[i].data(), sizeof(char), osize[i], ostream);
                     obytes += osize[i];
@@ -140,6 +167,7 @@ std::array<size_t, 3> decompressStream(FILE *inputStream, FILE *outputStream) {
                             err[i]);
                     exit(1);
                 }
+            }
         }
 
         nblocks += numBlocksRead;
@@ -158,6 +186,7 @@ std::array<size_t, 3> decompressStream(FILE *inputStream, FILE *outputStream) {
 
 int main(int argc, char **argv) {
     std::string inputFP;
+    std::string outputFP;
 
     CLI::App app{"Serial BZIP Compression"};
     app.option_defaults()->always_capture_default(true);
@@ -167,6 +196,10 @@ int main(int argc, char **argv) {
         ->required()
         ->check(CLI::ExistingFile);
 
+    app.add_option("-o,--output-filepath", outputFP, "Output filepath")
+        ->required()
+        ->check(CLI::NonexistentPath);
+
     CLI11_PARSE(app, argc, argv);
 
     FILE *inputFPPtr = fopen(inputFP.c_str(), "rb");
@@ -174,6 +207,19 @@ int main(int argc, char **argv) {
         fprintf(stderr, "Error opening input file %s\n", inputFP.c_str());
         return 1;
     }
+
+    FILE *outputFPPtr = fopen(outputFP.c_str(), "wb");
+    if (outputFPPtr == nullptr) {
+        fprintf(stderr, "Error: failed to open %s for writing\n",
+                outputFP.c_str());
+        return 2;
+    }
+
+    std::array<size_t, 3> result;
+    result = decompress_stream(inputFPPtr, outputFPPtr);
+
+    fclose(inputFPPtr);
+    fclose(outputFPPtr);
 
     return 0;
 }

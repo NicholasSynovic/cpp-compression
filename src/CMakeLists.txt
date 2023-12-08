@@ -28,4 +28,4 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(cli11)
 
 add_subdirectory(compression)
-# add_subdirectory(decompression)
+add_subdirectory(decompression)
