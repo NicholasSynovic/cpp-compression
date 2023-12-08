@@ -37,9 +37,10 @@ std::array<size_t, 3> decompress_stream(FILE *istream, FILE *ostream) {
     int blockSize100k = 0;
 
     bool isFirstBlock = true;
-
+    
     while (true) {
-
+        size_t pos;
+        
         // Read in a chunk of data for scanning.
         size_t nread = fread(bufIn, sizeof(char), bufSize, istream);
 
@@ -54,10 +55,6 @@ std::array<size_t, 3> decompress_stream(FILE *istream, FILE *ostream) {
         // Concatenate the existing stream (anything left over) with the new
         // chunk.
         streamIn.append(bufIn, bufIn + nread);
-#ifdef _DEBUG
-        fprintf(stderr, "nread = %lu, isEnd=%d length=%lu\n", nread, isEnd,
-                streamIn.length());
-#endif
 
         // Special code if this is the precise head of a block.
         if (isFirstBlock) {
@@ -77,15 +74,9 @@ std::array<size_t, 3> decompress_stream(FILE *istream, FILE *ostream) {
             // Deduce the block size used and assume all blocks are the same.
             blockSize100k = atoi(streamIn.substr(3, 1).c_str());
             bz2header[3] = streamIn[3];
-#ifdef _DEBUG
-            std::cerr << "blockSize = " << blockSize100k << " bz2header "
-                      << bz2header << "\n";
-#endif
         }
 
-        size_t pos;
-
-        // Sanity check that the stream starts with a full header.
+    // Sanity check that the stream starts with a full header.
         {
             pos = streamIn.find(bz2header, 0);
             if (pos != 0) {
@@ -116,13 +107,6 @@ std::array<size_t, 3> decompress_stream(FILE *istream, FILE *ostream) {
             isize.push_back(size);
             idata.push_back(block);
 
-#ifdef _DEBUG
-            fprintf(stderr, "found bzheader at %d %lu %lu %s %d last=%d\n", i,
-                    pos, size,
-                    streamIn.substr(next, bz2header.length()).c_str(),
-                    numBlocksRead, not(next < nread));
-#endif
-
             pos = next;
             if (next == streamIn.length() and isEnd)
                 break;
@@ -138,30 +122,31 @@ std::array<size_t, 3> decompress_stream(FILE *istream, FILE *ostream) {
         std::vector<int> err(numBlocksRead, 0);
 
         // Decompress the loaded blocks.
+        # pragma omp parallel for
         for (int i = 0; i < numBlocksRead; i++) {
             osize[i] = blockSize100k * 102400;
             odata[i].resize(osize[i]);
-
+            
             int ierr = BZ2_bzBuffToBuffDecompress(odata[i].data(), &osize[i],
                                                   idata[i].data(), isize[i], 0,
                                                   BZIP_VERBOSE);
 
-            err[i] = ierr;
-
-#ifdef _DEBUG
-            fprintf(stderr, "BZ2_bzBuffToBuffDecompress: %d %d %u %u %f\n",
-                    ierr, i, osize[i], isize[i], getElapsedTime(_t0, _t1));
-#endif
+            # pragma omp critical
+            {
+                err[i] = ierr;
+            }
         }
 
         // Write out the decompressed streams.
+        // Don't parallelize
         for (int i = 0; i < numBlocksRead; i++) {
             if (isize[i] > 0) {
                 if (err[i] == BZ_OK) {
-                    fwrite(odata[i].data(), sizeof(char), osize[i], ostream);
-                    obytes += osize[i];
-
-                    osize[i] = 0;
+                    {
+                        fwrite(odata[i].data(), sizeof(char), osize[i], ostream);
+                        obytes += osize[i];
+                        osize[i] = 0;
+                    }
                 } else {
                     fprintf(stderr, "Error decompressing block %d %d\n", i,
                             err[i]);
