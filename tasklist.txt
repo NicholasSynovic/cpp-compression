@@ -1,13 +1,6 @@
-Add documentation
-Implement openmp for decompression
 Implement mpi for compression
 Implement mpi for decompression
 Create benchmark utility to test different implementations
-    tar bzip
-    bzip2
-    lbzip2 (parallel)
-    serial
-    openmp
     mpi
     openmp + mpi
     intel TBB?
