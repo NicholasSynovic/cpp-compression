@@ -86,13 +86,34 @@ do
 done
 
 # OpenMP Decompression (Parallel)
-for i in $(seq 1 $MAX_ITER);
-do
-    echo "OpenMP $ACTION_WORD: $i / $MAX_ITER"
-    cp $BZIP2_BACKUP_ARCHIVE_FILEPATH $BZIP2_ARCHIVE_FILEPATH
-    /usr/bin/time --append --output $OUTPUT_BENCHMARK_DIR/openmp_compression.csv --format=$TIME_FORMAT --quiet src/bin/openmp_decompression -i $BZIP2_ARCHIVE_FILEPATH -o $OUTPUT_FILEPATH
-    rm $OUTPUT_FILEPATH
-done
+openmpDecompression ()  {
+    for i in $(seq 1 $MAX_ITER);
+    do
+        echo "OpenMP $ACTION_WORD: $i / $MAX_ITER"
+        cp $BZIP2_BACKUP_ARCHIVE_FILEPATH $BZIP2_ARCHIVE_FILEPATH
+        /usr/bin/time --append --output $OUTPUT_BENCHMARK_DIR/openmp_compression_$1.csv --format=$TIME_FORMAT --quiet src/bin/openmp_decompression -i $BZIP2_ARCHIVE_FILEPATH -o $OUTPUT_FILEPATH
+        rm $OUTPUT_FILEPATH
+    done
+}
+
+OMP_NUM_THREADS=1
+openmpDecompression $OMP_NUM_THREADS
+
+OMP_NUM_THREADS=2
+openmpDecompression $OMP_NUM_THREADS
+
+OMP_NUM_THREADS=4
+openmpDecompression $OMP_NUM_THREADS
+
+OMP_NUM_THREADS=8
+openmpDecompression $OMP_NUM_THREADS
+
+OMP_NUM_THREADS=16
+openmpDecompression $OMP_NUM_THREADS
+
+OMP_NUM_THREADS=32
+openmpDecompression $OMP_NUM_THREADS
+
 
 # Delete $BZIP2_ARCHIVE_FILEPATH
 # Delete $BZIP2_BACKUP_ARCHIVE_FILEPATH
