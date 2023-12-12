@@ -47,48 +47,49 @@ std::vector<char> compressChunk(const std::vector<char> &datum) {
 }
 
 std::array<size_t, 3> compressStream(FILE *inputStream, FILE *outputStream) {
-    // How big are the input chunks?
-    // The compression level switch is [1-9] which means 100-900k.
-    size_t compressedChunkSize = BZIP_COMPRESSION_LEVEL * 100 * 1024;
+    size_t chunk_size = BZIP_COMPRESSION_LEVEL * 100 * 1024;
+    int K = 16; // number of blocks to read, compress, and write at a time
 
-    int numberOfChunks = 0;
-    size_t inputBytes = 0;
-    size_t outputBytes = 0;
+    int n_chunks = 0;
+    size_t ibytes = 0;
+    size_t obytes = 0;
 
-    // While not at end of file marker
-    while (not(feof(inputStream))) {
+    while ( not(feof(inputStream)) )
+    {
+        std::vector<std::vector<char>> chunks(K, std::vector<char>(chunk_size));
+        std::vector<size_t> bytes_read(K, 0);
+        std::vector<std::vector<char>> odata(K);
 
+        // read K blocks of data from the input stream
+        for (int i = 0; i < K && !feof(inputStream); ++i)
+        {
+    
+            bytes_read[i] = fread(chunks[i].data(), sizeof(char), chunk_size, inputStream);
+            ibytes += bytes_read[i];
+
+            if (bytes_read[i] < chunk_size)
+                chunks[i].resize(bytes_read[i]);
+        }
+
+        // in parallel, compress the K blocks
         #pragma omp parallel for
-        for (int i = - 1; i < numberOfChunks; i++) {
+        for (int i = 0; i < K; ++i)
+        {
+            if (bytes_read[i] > 0)
+                odata[i] = compressChunk(chunks[i]);
+        }
 
-            // Space for the input stream data.
-            std::vector<char> chunk(compressedChunkSize);
-
-            // Read a chunk of data from the input stream.
-            auto dataBytes = fread(chunk.data(), sizeof(char),
-                                   compressedChunkSize, inputStream);
-
-            inputBytes += dataBytes;
-
-            // Resize the bytes read to reduce
-            if (dataBytes < compressedChunkSize)
-                chunk.resize(dataBytes);
-
-            auto compressedChunk = compressChunk(chunk);
-
-            outputBytes += compressedChunk.size();
-
-            #pragma omp critical
-            {
-                fwrite(compressedChunk.data(), sizeof(char),
-                       compressedChunk.size(), outputStream);
+        // write the K compressed blocks to the output stream
+        for (int i = 0; i < K; ++i)
+        {
+            if (bytes_read[i] > 0) {
+                obytes += odata[i].size();
+                fwrite(odata[i].data(), sizeof(char), odata[i].size(), outputStream);
             }
-            
-            numberOfChunks++;
+            n_chunks ++;
         }
     }
-
-    return {size_t(numberOfChunks), inputBytes, outputBytes};
+    return {size_t(n_chunks), ibytes, obytes};
 }
 
 int main(int argc, char **argv) {
