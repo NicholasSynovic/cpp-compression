@@ -8,7 +8,7 @@
 # compressor
 
 # CHANGE THESE TO ADJUST BENCHMARK FUNCTIONALITY
-MAX_ITER=10
+MAX_ITER=100
 INPUT_FILEPATH="testData/enwik8"
 OUTPUT_BENCHMARK_DIR="benchmarks/compression"
 # ====
@@ -40,13 +40,13 @@ cp $BACKUP_INPUT_FILEPATH $INPUT_FILEPATH
 # done
 
 # Tar Compression (Serial)
-for i in $(seq 1 $MAX_ITER);
-do
-    echo "Tar $ACTION_WORD: $i / $MAX_ITER"
-    cp $BACKUP_INPUT_FILEPATH $INPUT_FILEPATH
-    /usr/bin/time --append --output $OUTPUT_BENCHMARK_DIR/tar.csv --format=$TIME_FORMAT --quiet tar -cjf $BZIP2_ARCHIVE_FILEPATH $INPUT_FILEPATH
-    rm $BZIP2_ARCHIVE_FILEPATH
-done
+# for i in $(seq 1 $MAX_ITER);
+# do
+#     echo "Tar $ACTION_WORD: $i / $MAX_ITER"
+#     cp $BACKUP_INPUT_FILEPATH $INPUT_FILEPATH
+#     /usr/bin/time --append --output $OUTPUT_BENCHMARK_DIR/tar.csv --format=$TIME_FORMAT --quiet tar -cjf $BZIP2_ARCHIVE_FILEPATH $INPUT_FILEPATH
+#     rm $BZIP2_ARCHIVE_FILEPATH
+# done
 
 # BZip2 Compression (Serial)
 for i in $(seq 1 $MAX_ITER);
