@@ -3,8 +3,8 @@
 mkdir testData
 cd testData
 
-wget -O data.zip https://mattmahoney.net/dc/enwik8.zip
+wget -O data.zip https://mattmahoney.net/dc/enwik9.zip
 unzip data.zip
 
 # Backup the file in case of errors or decompression overwrite
-cp enwik8 enwik8.bk
+cp enwik9 enwik9.bk

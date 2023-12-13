@@ -9,9 +9,9 @@
 
 # CHANGE THESE TO ADJUST BENCHMARK FUNCTIONALITY
 MAX_ITER=100
-BZIP2_ARCHIVE_FILEPATH="testData/enwik8.bz2"
+BZIP2_ARCHIVE_FILEPATH="testData/enwik9.bz2"
 OUTPUT_BENCHMARK_DIR="benchmarks/decompression"
-OUTPUT_FILEPATH="testData/enwik8"
+OUTPUT_FILEPATH="testData/enwik9"
 # ====
 
 ACTION_WORD="Decompression"
@@ -109,9 +109,6 @@ OMP_NUM_THREADS=8
 openmpDecompression $OMP_NUM_THREADS
 
 OMP_NUM_THREADS=16
-openmpDecompression $OMP_NUM_THREADS
-
-OMP_NUM_THREADS=32
 openmpDecompression $OMP_NUM_THREADS
 
 
